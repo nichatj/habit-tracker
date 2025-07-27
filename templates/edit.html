@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Habit</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    flatpickr("#history-picker", {
+      mode: "multiple",
+      dateFormat: "Y-m-d",
+      defaultDate: {{ habit.history | tojson | safe }}
+    });
+  });
+  </script>
+
+</head>
+<body>
+  <h1>Edit Habit</h1>
+
+  <form method="POST">
+  <label>New Habit Name:</label>
+  <input type="text" name="new_name" value="{{ habit.name }}" required><br>
+
+  <label>Streak:</label>
+  <input type="number" name="new_streak" value="{{ habit.streak }}"><br>
+
+  <label>Start Date:</label>
+  <input type="date" name="new_created" value="{{ habit.created }}"><br>
+
+  <label>Completed Dates:</label>
+  <input type="text" id="history-picker" name="new_history" placeholder="Select one or more dates"><br>
+
+  <button type="submit">Save Changes</button>
+  </form>
+
+</body>
+</html>

@@ -1,0 +1,78 @@
+[
+    {
+        "name": "Meditation 10 min",
+        "created": "2025-07-24",
+        "last_completed": "2025-07-25",
+        "streak": 4,
+        "history": [
+            "2025-07-21",
+            "2025-07-22",
+            "2025-07-24",
+            "2025-07-25"
+        ]
+    },
+    {
+        "name": "Sleep for 8 hours",
+        "created": "2025-07-24",
+        "last_completed": "2025-07-25",
+        "streak": 2,
+        "history": [
+            "2025-07-24",
+            "2025-07-25"
+        ]
+    },
+    {
+        "name": "Weight train 10 min",
+        "created": "2025-07-24",
+        "last_completed": "2025-07-25",
+        "streak": 2,
+        "history": [
+            "2025-07-24",
+            "2025-07-25"
+        ]
+    },
+    {
+        "name": "Cardio 20 min",
+        "created": "2025-07-24",
+        "last_completed": "2025-07-25",
+        "streak": 2,
+        "history": [
+            "2025-07-02",
+            "2025-07-10",
+            "2025-07-04",
+            "2025-07-24",
+            "2025-07-25"
+        ]
+    },
+    {
+        "name": "Dance 20 min",
+        "created": "2025-07-06",
+        "last_completed": "2025-07-25",
+        "streak": 2,
+        "history": [
+            "2025-07-06",
+            "2025-07-25"
+        ]
+    },
+    {
+        "name": "Journal",
+        "created": "2025-07-24",
+        "last_completed": "2025-07-25",
+        "streak": 2,
+        "history": [
+            "2025-07-24",
+            "2025-07-25"
+        ]
+    },
+    {
+        "name": "Walk 2 miles",
+        "created": "2025-07-25",
+        "last_completed": "2025-07-25",
+        "streak": 3,
+        "history": [
+            "2025-07-18",
+            "2025-07-11",
+            "2025-07-25"
+        ]
+    }
+]

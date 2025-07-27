@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Habit Stats</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>📊 Habit Statistics</h1>
+  <ul>
+    <li><strong>Total Habits:</strong> {{ total_habits }}</li>
+    <li><strong>Total Completions:</strong> {{ total_completions }}</li>
+    <li><strong>Longest Streak:</strong> {{ longest_streak }}</li>
+    <li><strong>Average Streak:</strong> {{ average_streak }}</li>
+  </ul>
+
+  <canvas id="streakChart" width="400" height="200"></canvas>
+
+  <script>
+    const ctx = document.getElementById('streakChart').getContext('2d');
+    const streakChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: {{ habit_names | tojson }},
+        datasets: [{
+          label: 'Streak Count',
+          data: {{ habit_streaks | tojson }},
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            stepSize: 1
+          }
+        }
+      }
+    });
+  </script>
+
+  <br>
+  <a href="/">← Back to Tracker</a>
+</body>
+</html>
