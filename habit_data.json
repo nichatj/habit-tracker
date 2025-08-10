@@ -2,33 +2,36 @@
     {
         "name": "Meditation 10 min",
         "created": "2025-07-24",
-        "last_completed": "2025-07-25",
-        "streak": 4,
+        "last_completed": "2025-08-10",
+        "streak": 5,
         "history": [
             "2025-07-21",
             "2025-07-22",
             "2025-07-24",
-            "2025-07-25"
+            "2025-07-25",
+            "2025-08-10"
         ]
     },
     {
         "name": "Sleep for 8 hours",
         "created": "2025-07-24",
-        "last_completed": "2025-07-25",
-        "streak": 2,
+        "last_completed": "2025-08-10",
+        "streak": 3,
         "history": [
             "2025-07-24",
-            "2025-07-25"
+            "2025-07-25",
+            "2025-08-10"
         ]
     },
     {
         "name": "Weight train 10 min",
         "created": "2025-07-24",
-        "last_completed": "2025-07-25",
-        "streak": 2,
+        "last_completed": "2025-08-10",
+        "streak": 3,
         "history": [
             "2025-07-24",
-            "2025-07-25"
+            "2025-07-25",
+            "2025-08-10"
         ]
     },
     {
@@ -47,11 +50,12 @@
     {
         "name": "Dance 20 min",
         "created": "2025-07-06",
-        "last_completed": "2025-07-25",
-        "streak": 2,
+        "last_completed": "2025-08-10",
+        "streak": 3,
         "history": [
             "2025-07-06",
-            "2025-07-25"
+            "2025-07-25",
+            "2025-08-10"
         ]
     },
     {
@@ -65,14 +69,12 @@
         ]
     },
     {
-        "name": "Walk 2 miles",
-        "created": "2025-07-25",
-        "last_completed": "2025-07-25",
-        "streak": 3,
+        "name": "Coding 30 min a day",
+        "created": "2025-08-10",
+        "last_completed": "2025-08-10",
+        "streak": 1,
         "history": [
-            "2025-07-18",
-            "2025-07-11",
-            "2025-07-25"
+            "2025-08-10"
         ]
     }
 ]
