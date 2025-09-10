@@ -1,0 +1,21 @@
+# Python / Flask
+__pycache__/
+*.pyc
+.venv/ venv/ env/
+instance/
+habit-tracker-backend/instance/
+*.db *.sqlite3
+
+# Svelte / Node
+habit-tracker-ui/node_modules/
+habit-tracker-ui/.svelte-kit/
+habit-tracker-ui/.vite/
+habit-tracker-ui/dist/
+habit-tracker-ui/build/
+
+# Misc
+.DS_Store
+npm-debug.log*
+*.log
+.env
+.env.*
