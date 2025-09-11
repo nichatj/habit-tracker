@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from datetime import date, datetime, timedelta
 
-from flask import Flask, request, jsonify   # ✅ correct imports
+from flask import Flask, request, jsonify  
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import UniqueConstraint
@@ -85,6 +85,123 @@ def api_toggle(habit_id):
         h.last_completed = today
         db.session.commit()
     return {"ok": True, "streak": h.streak, "last_completed": h.last_completed.isoformat()}
+
+#edit habit
+
+def _recompute_from_history(h: Habit):
+    dates = [c.done_on for c in h.completions.order_by(Completion.done_on.asc()).all()]
+    if not dates:
+        h.streak = 0
+        h.last_completed = None
+        return
+    h.last_completed = dates[-1]
+    # trailing streak ending at last_completed
+    streak = 1
+    i = len(dates) - 1
+    while i > 0 and (dates[i] - dates[i - 1]).days == 1:
+        streak += 1
+        i -= 1
+    h.streak = streak
+
+def _parse_dates(maybe_list):
+    out = set()
+    if not maybe_list:
+        return out
+    for x in maybe_list:
+        try:
+            out.add(datetime.strptime(x.strip(), "%Y-%m-%d").date())
+        except Exception:
+            pass
+    return out
+
+@app.patch("/api/habits/<int:habit_id>")
+def api_update_habit(habit_id):
+    h = Habit.query.get_or_404(habit_id)
+    data = request.json or {}
+    history_changed = False
+
+    # name
+    if "name" in data:
+        new_name = (data.get("name") or "").strip()
+        if not new_name:
+            return {"error": "name cannot be empty"}, 400
+        h.name = new_name
+
+    # created (YYYY-MM-DD)
+    if "created" in data:
+        try:
+            h.created = datetime.strptime((data["created"] or "").strip(), "%Y-%m-%d").date()
+        except Exception:
+            return {"error": "invalid created date"}, 400
+
+    # Replace entire history (array of 'YYYY-MM-DD')
+    if "history" in data and isinstance(data["history"], list):
+        new_dates = sorted(_parse_dates(data["history"]))
+        Completion.query.filter_by(habit_id=h.id).delete()
+        for d in new_dates:
+            db.session.add(Completion(habit_id=h.id, done_on=d))
+        history_changed = True
+
+    # Or patch-like operations
+    add_dates = _parse_dates(data.get("add_dates"))
+    remove_dates = _parse_dates(data.get("remove_dates"))
+    if add_dates or remove_dates:
+        # add
+        for d in add_dates:
+            exists = Completion.query.filter_by(habit_id=h.id, done_on=d).first()
+            if not exists:
+                db.session.add(Completion(habit_id=h.id, done_on=d))
+        # remove
+        if remove_dates:
+            Completion.query.filter(
+                Completion.habit_id == h.id,
+                Completion.done_on.in_(list(remove_dates))
+            ).delete(synchronize_session=False)
+        history_changed = True
+
+    # Recompute streak/last_completed when history changed
+    if history_changed:
+        _recompute_from_history(h)
+    else:
+        # allow manual streak override only if history not changed
+        if "streak" in data:
+            try:
+                h.streak = int(data["streak"])
+            except Exception:
+                return {"error": "invalid streak"}, 400
+
+    db.session.commit()
+    return {
+        "ok": True,
+        "habit": {
+            "id": h.id,
+            "name": h.name,
+            "streak": h.streak,
+            "created": h.created.isoformat(),
+            "last_completed": h.last_completed.isoformat() if h.last_completed else None,
+            "history": [c.done_on.isoformat() for c in h.completions.order_by(Completion.done_on.asc())]
+        }
+    }
+
+@app.post("/api/habits/<int:habit_id>/toggle-date")
+def api_toggle_date(habit_id):
+    h = Habit.query.get_or_404(habit_id)
+    ds = (request.json or {}).get("date", "")
+    try:
+        d = datetime.strptime(ds.strip(), "%Y-%m-%d").date()
+    except Exception:
+        return {"error": "invalid date"}, 400
+
+    existing = Completion.query.filter_by(habit_id=h.id, done_on=d).first()
+    if existing:
+        db.session.delete(existing)
+    else:
+        db.session.add(Completion(habit_id=h.id, done_on=d))
+
+    _recompute_from_history(h)
+    db.session.commit()
+    return {"ok": True, "streak": h.streak,
+            "last_completed": h.last_completed.isoformat() if h.last_completed else None}
 
 @app.delete("/api/habits/<int:habit_id>")
 def api_delete(habit_id):
