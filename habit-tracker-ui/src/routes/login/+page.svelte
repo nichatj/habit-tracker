@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { onMount } from "svelte";
   import BarChart from "$lib/components/BarChart.svelte";
@@ -12,48 +10,34 @@
   };
   type Habit = { id:number; name:string; streak:number|null|undefined };
 
-  // ✅ rune state
+  // ✅ make mutated vars reactive
   let stats  = $state<Stats | null>(null);
   let labels = $state<string[]>([]);
   let values = $state<number[]>([]);
   let loading = $state(true);
   let error = $state("");
 
-  function log(...a:any[]) { console.log("[/stats]", ...a); }
-
   async function load() {
-    log("load() start");
-    const ac = new AbortController();
-    const timeout = setTimeout(() => ac.abort(), 10000); // 10s guard
-
+    loading = true;
+    error = "";
     try {
       const [sres, hres] = await Promise.all([
-        fetch("/api/stats",  { credentials: "include", signal: ac.signal }),
-        fetch("/api/habits", { credentials: "include", signal: ac.signal })
+        fetch("/api/stats",  { credentials: "include" }),
+        fetch("/api/habits", { credentials: "include" })
       ]);
-
-      log("responses", sres.status, hres.status, sres.url, hres.url);
-
       if (!sres.ok) throw new Error(`stats ${sres.status}: ${await sres.text()}`);
       if (!hres.ok) throw new Error(`habits ${hres.status}: ${await hres.text()}`);
 
-      const sjson = (await sres.json()) as Stats;
-      log("stats json", sjson);
-      stats = sjson;
+      stats = (await sres.json()) as Stats;
 
-      const hjson = (await hres.json()) as { habits: Habit[] };
-      log("habits json", hjson);
-
-      const sorted = [...(hjson.habits ?? [])].sort((a,b)=> (b.streak??0)-(a.streak??0));
+      const data = (await hres.json()) as { habits: Habit[] };
+      const sorted = [...data.habits].sort((a,b)=> (b.streak ?? 0)-(a.streak ?? 0));
       labels = sorted.map(h=>h.name);
       values = sorted.map(h=>h.streak ?? 0);
-    } catch (e:any) {
-      log("error", e);
-      error = e?.name === "AbortError" ? "Request timed out" : (e?.message || "Failed to load");
+    } catch (e) {
+      error = (e as Error).message || "Failed to load";
     } finally {
-      clearTimeout(timeout);
       loading = false;
-      log("loading ->", loading);
     }
   }
 

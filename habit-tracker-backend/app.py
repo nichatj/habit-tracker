@@ -7,6 +7,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import UniqueConstraint
 
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+
 # Optional in dev: allow Svelte (5173) to call /api/*
 # from flask_cors import CORS
 
@@ -20,6 +23,19 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# --- app + session cookie tweaks (optional but good) ---
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",  # fine for same-site proxy
+    # SESSION_COOKIE_SECURE=True,   # enable in production (HTTPS)
+)
+
+# --- Login manager ---
+login_manager = LoginManager(app)
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 # --- Models ---
 class Habit(db.Model):
@@ -43,6 +59,15 @@ class Completion(db.Model):
     habit_id = db.Column(db.Integer, db.ForeignKey("habits.id"), nullable=False)
     done_on = db.Column(db.Date, nullable=False)
     __table_args__ = (UniqueConstraint("habit_id", "done_on", name="uix_habit_day"),)
+
+class User(db.Model, UserMixin):
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True, index=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+
+    def set_password(self, raw): self.password_hash = generate_password_hash(raw)
+    def check_password(self, raw): return check_password_hash(self.password_hash, raw)
 
 # --- API ROUTES ONLY ---
 
@@ -234,6 +259,61 @@ def api_calendar():
         for c in h.completions.order_by(Completion.done_on.asc()).all():
             events.append({"title": h.name, "start": c.done_on.isoformat(), "color": color})
     return {"events": events}
+
+#--Auth
+@app.post("/api/auth/register")
+def register():
+    data = request.json or {}
+    email = (data.get("email") or "").strip().lower()
+    password = (data.get("password") or "").strip()
+    if not email or not password:
+        return {"error": "email and password required"}, 400
+    if User.query.filter_by(email=email).first():
+        return {"error": "email already registered"}, 400
+    u = User(email=email)
+    u.set_password(password)
+    db.session.add(u); db.session.commit()
+    login_user(u)  # auto-login after signup
+    return {"ok": True, "user": {"id": u.id, "email": u.email}}
+
+@app.post("/api/auth/login")
+def login():
+    data = request.json or {}
+    email = (data.get("email") or "").strip().lower()
+    password = (data.get("password") or "").strip()
+    u = User.query.filter_by(email=email).first()
+    if not u or not u.check_password(password):
+        return {"error": "invalid credentials"}, 401
+    login_user(u)
+    return {"ok": True, "user": {"id": u.id, "email": u.email}}
+
+@app.post("/api/auth/logout")
+@login_required
+def logout():
+    logout_user()
+    return {"ok": True}
+
+@app.get("/api/auth/me")
+def me():
+    if current_user.is_authenticated:
+        return {"user": {"id": current_user.id, "email": current_user.email}}
+    return {"user": None}
+##--
+# @app.post("/api/habits")
+# @login_required
+# def api_add_habit(): ...
+# @app.post("/api/habits/<int:habit_id>/toggle")
+# @login_required
+# def api_toggle(habit_id): ...
+# @app.post("/api/habits/<int:habit_id>/toggle-date")
+# @login_required
+# def api_toggle_date(habit_id): ...
+# @app.patch("/api/habits/<int:habit_id>")
+# @login_required
+# def api_update_habit(habit_id): ...
+# @app.delete("/api/habits/<int:habit_id>")
+# @login_required
+# def api_delete(habit_id): ...
 
 #errorhandler 
 @app.errorhandler(404)

@@ -1,53 +1,46 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
-  export let labels: string[] = [];
-  export let values: number[] = [];
-  export let height = 220;
+  // Rune-friendly props (replaces `export let ...`)
+  let { labels = [], values = [], height = 220 } =
+    $props<{ labels: string[]; values: number[]; height?: number }>();
 
-  // Keep your single, ordered array
-  $: pairs = labels.map((lbl, i) => ({ label: lbl, value: values[i] ?? 0 }));
-
-  // Layout numbers (viewBox units)
+  // Layout (viewBox units)
   const pad = 6;
   const gap = 2.5;
-  $: max   = Math.max(1, ...pairs.map(p => p.value));
-  $: count = pairs.length;
-  $: barW  = count ? (100 - pad * 2 - gap * (count - 1)) / count : 0;
 
-  // ---- distinct random colors per bar ----
-  let colors: string[] = [];
+  // Derived data
+  const pairs = $derived(labels.map((lbl, i) => ({
+    id: i,                    // unique per bar; avoids duplicate-key crashes
+    label: lbl,
+    value: values[i] ?? 0
+  })));
 
-  // regenerate only if bar count changes
-  $: if (count !== colors.length) {
-    // pick a random starting hue, then spread hues evenly around the circle
-    const offset = Math.floor(Math.random() * 360);
-    colors = Array.from({ length: count }, (_, i) => {
-      const hue = (offset + Math.round(360 / Math.max(1, count)) * i) % 360;
+  const count = $derived(pairs.length);
+  const max   = $derived(Math.max(1, ...pairs.map(p => p.value)));
+  const barW  = $derived(count ? (100 - pad * 2 - gap * (count - 1)) / count : 0);
+
+  // Deterministic colors (no flicker across renders)
+  const colors = $derived(
+    Array.from({ length: count }, (_, i) => {
+      const hue = (i * 137) % 360; // golden-angle step for nice spread
       return `hsl(${hue} 70% 55%)`;
-    });
-    // optional shuffle so the order isn't correlated with index
-    shuffle(colors);
-  }
-
-  function shuffle(a: string[]) {
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-  }
+    })
+  );
 </script>
 
 <div class="w-full overflow-x-auto">
   <div class="min-w-full">
     <svg class="w-full" {height} viewBox="0 0 100 100" preserveAspectRatio="none">
       <line x1="0" y1="100" x2="100" y2="100" stroke="#e5e7eb" stroke-width="0.5" />
-      {#each pairs as p, i (p.label)}
+      {#each pairs as p, i (p.id)}
         <rect
           x={pad + i * (barW + gap)}
           y={100 - (p.value / max) * 90}
           width={barW}
           height={(p.value / max) * 90}
           rx="1.5"
-          fill={colors[i] /* distinct random color */}
+          fill={colors[i]}
           stroke="rgba(0,0,0,0.12)"
         >
           <title>{p.label}: {p.value}</title>

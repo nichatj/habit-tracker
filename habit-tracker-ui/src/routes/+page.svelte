@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
+  const api = (url: string, opts: RequestInit = {}) =>
+  fetch(url, { credentials: 'include', ...opts });
+
   type Habit = {
     id: number;
     name: string;
