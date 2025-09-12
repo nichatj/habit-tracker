@@ -298,22 +298,6 @@ def me():
     if current_user.is_authenticated:
         return {"user": {"id": current_user.id, "email": current_user.email}}
     return {"user": None}
-##--
-# @app.post("/api/habits")
-# @login_required
-# def api_add_habit(): ...
-# @app.post("/api/habits/<int:habit_id>/toggle")
-# @login_required
-# def api_toggle(habit_id): ...
-# @app.post("/api/habits/<int:habit_id>/toggle-date")
-# @login_required
-# def api_toggle_date(habit_id): ...
-# @app.patch("/api/habits/<int:habit_id>")
-# @login_required
-# def api_update_habit(habit_id): ...
-# @app.delete("/api/habits/<int:habit_id>")
-# @login_required
-# def api_delete(habit_id): ...
 
 #errorhandler 
 @app.errorhandler(404)
